@@ -1,0 +1,21 @@
+{
+  "name": "soso-signal-desk",
+  "version": "1.0.0",
+  "description": "Agentic SSI Index Arbitrage, ETF Flow Regime & Risk-Gated SoDEX EIP-712 Execution Workbench built for SoSoValue & SoDEX",
+  "type": "module",
+  "scripts": {
+    "scan": "node cli/scan.mjs",
+    "test": "node --test tests/all.test.mjs",
+    "serve": "npx --yes http-server . -p 4173 -c-1"
+  },
+  "keywords": [
+    "sosovalue",
+    "sodex",
+    "valuechain",
+    "ssi-index",
+    "agentic-finance",
+    "eip-712",
+    "orderbook"
+  ],
+  "license": "MIT"
+}

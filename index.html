@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoSoSignal Desk — Agentic SSI Index, ETF Regime &amp; SoDEX Execution</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">SS</div>
+      <div>
+        <h1>SoSoSignal Desk</h1>
+        <p class="subtitle">SoSoValue OpenAPI &bull; Live SoDEX Spot / Perps / SSI &bull; ValueChain EIP-712 Risk Gate</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label class="pill-control">
+        <span>Network</span>
+        <select id="networkSelect">
+          <option value="mainnet" selected>ValueChain Mainnet (286623)</option>
+          <option value="testnet">ValueChain Testnet (138565)</option>
+        </select>
+      </label>
+      <div class="api-key-group">
+        <input id="sosoApiKeyInput" type="password" placeholder="Optional x-soso-api-key..." autocomplete="off" />
+        <button id="saveKeyBtn" class="btn btn-secondary">Apply Key</button>
+      </div>
+      <button id="refreshBtn" class="btn btn-primary">Refresh Live Feeds</button>
+    </div>
+  </header>
+
+  <section class="status-bar" id="statusBar">
+    <div class="status-chip"><span class="dot live"></span> SoDEX Feed: <strong id="sodexStatus">Connecting...</strong></div>
+    <div class="status-chip">ValueChain Block: <strong id="vcBlock">--</strong></div>
+    <div class="status-chip">Chain ID: <strong id="vcChainId">--</strong></div>
+    <div class="status-chip">SoSoValue Intel: <strong id="sosoSource">Loading...</strong></div>
+    <div class="status-chip">Macro Regime: <strong id="regimeBadge" class="regime-pill">--</strong></div>
+  </section>
+
+  <main class="dashboard-grid">
+    <!-- Left Column: Live SSI Indexes + Microstructure Chart -->
+    <section class="panel span-2">
+      <div class="panel-header">
+        <div>
+          <h2>1. Live SoSoValue Spot Indices (`SSI`) &amp; Ecosystem Markets on SoDEX</h2>
+          <p class="panel-desc">Streaming unsigned mainnet/testnet tickers, L2 depth imbalance, VWAP deviation, and hourly realized volatility.</p>
+        </div>
+        <span class="badge badge-live">Live REST</span>
+      </div>
+
+      <div class="ssi-cards" id="ssiCards"></div>
+
+      <div class="split-detail">
+        <div class="subcard">
+          <div class="subcard-head">
+            <h3 id="selectedChartTitle">vDEFIssi_vUSDC — 24h Hourly Price &amp; VWAP</h3>
+            <span id="selectedStatsBadge" class="badge">--</span>
+          </div>
+          <svg id="klineSvg" viewBox="0 0 640 190" class="chart-svg" aria-label="Hourly Kline Price Chart"></svg>
+          <div id="chartMetrics" class="mini-metrics"></div>
+        </div>
+
+        <div class="subcard">
+          <div class="subcard-head">
+            <h3>Top-5 L2 Orderbook Depth &amp; Imbalance</h3>
+            <span id="bookHeightBadge" class="mono">block --</span>
+          </div>
+          <div id="orderbookView" class="orderbook-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: ETF Regime & News Sentiment -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>2. Macro, ETF Flow &amp; Regime Classifier</h2>
+          <p class="panel-desc">SoSoValue OpenAPI `/etfs/summary-history`, `/news/hot`, and `/macro/events` regime allocator.</p>
+        </div>
+        <span id="sosoModeBadge" class="badge">Sandbox</span>
+      </div>
+
+      <div id="regimePanel" class="regime-panel"></div>
+
+      <h3 class="section-sub">Scored Hot News Signals</h3>
+      <div id="newsFeed" class="news-list"></div>
+
+      <h3 class="section-sub">Upcoming Macro Catalysts</h3>
+      <div id="macroList" class="macro-list"></div>
+    </section>
+
+    <!-- Bottom Left: Spot-Perp Basis & Annualized Carry Screener -->
+    <section class="panel span-2">
+      <div class="panel-header">
+        <div>
+          <h2>3. Cross-Market Spot–Perp Basis &amp; Funding Carry Screener (98 Perps / 48 Spot)</h2>
+          <p class="panel-desc">Ranks live SoDEX Spot vs Perpetual markets by annualized funding APR, basis divergence, spread cost, and composite Signal Score.</p>
+        </div>
+        <input id="screenerFilter" type="search" class="search-box" placeholder="Filter ticker (e.g. BTC, ETH, NVDA)..." />
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Base</th>
+              <th>Spot Pair</th>
+              <th>Perp Contract</th>
+              <th>Spot / Perp Px</th>
+              <th>Basis %</th>
+              <th>Funding APR</th>
+              <th>Spread (bps)</th>
+              <th>24h Vol (USD)</th>
+              <th>Signal</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="basisTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Bottom Right: Risk-Gated EIP-712 Action Workbench & Paper Ledger -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>4. Risk-Gated SoDEX EIP-712 Intent &amp; Paper Ledger</h2>
+          <p class="panel-desc">Deterministic tick/lot alignment, spread guard, notional cap, and canonical Keccak-256 `ExchangeAction` digest.</p>
+        </div>
+        <span class="badge badge-guard">Risk Guard Active</span>
+      </div>
+
+      <form id="orderForm" class="order-form">
+        <div class="form-row">
+          <label>Target Market
+            <select id="orderSymbolSelect"></select>
+          </label>
+          <label>Account ID (`aid`)
+            <input id="orderAccountId" type="number" min="1" value="1010" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>Side
+            <select id="orderSide">
+              <option value="BUY">BUY (1)</option>
+              <option value="SELL">SELL (2)</option>
+            </select>
+          </label>
+          <label>Order Type / TIF
+            <select id="orderTif">
+              <option value="LIMIT:GTC">LIMIT / GTC</option>
+              <option value="LIMIT:IOC">LIMIT / IOC</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>Limit Price (USDC)
+            <input id="orderPrice" type="text" value="0.3980" />
+          </label>
+          <label>Quantity
+            <input id="orderQuantity" type="text" value="100.00" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>Max Desk Notional (USD)
+            <input id="riskMaxNotional" type="number" min="5" value="1000" />
+          </label>
+          <label>Max Spread Guard (bps)
+            <input id="riskMaxSpread" type="number" min="1" value="75" />
+          </label>
+        </div>
+
+        <label class="checkbox-line">
+          <input id="riskConfirmCheck" type="checkbox" checked />
+          <span>Explicit operator confirmation for EIP-712 payload &amp; paper execution</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Validate &amp; Build EIP-712 Digest</button>
+          <button type="button" id="signWalletBtn" class="btn btn-secondary">Sign via Browser Wallet</button>
+        </div>
+      </form>
+
+      <div id="riskChecksOut" class="risk-checks"></div>
+
+      <h3 class="section-sub">Canonical `batchNewOrder` Payload &amp; EIP-712 Digest</h3>
+      <pre id="eip712Preview" class="code-box">Submit form to compute canonical Go-compatible JSON, Keccak-256 payloadHash, and EIP-712 ExchangeAction digest...</pre>
+
+      <h3 class="section-sub">Paper Simulation Ledger (Saved Locally)</h3>
+      <div id="paperLedger" class="ledger-list"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Built by <strong>SoSoSignal Labs (@random-solver)</strong> for SoSoValue Buildathon Wave 3 &bull; Zero-custody read-only live SoDEX/ValueChain integration + optional personal `x-soso-api-key`.</span>
+  </footer>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
